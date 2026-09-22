@@ -9,11 +9,11 @@ create type public.draw_mode as enum ('random', 'algorithmic');
 create type public.verification_status as enum ('pending', 'approved', 'rejected');
 create type public.payout_status as enum ('pending', 'paid');
 
-create or replace function public.is_valid_draw_numbers(values smallint[])
+create or replace function public.is_valid_draw_numbers(draw_values smallint[])
 returns boolean language sql immutable as $$
-  select cardinality(values) in (0, 5)
-    and coalesce((select bool_and(value between 1 and 45) from unnest(values) as value), true)
-    and cardinality(values) = coalesce((select count(distinct value) from unnest(values) as value), 0);
+  select cardinality(draw_values) in (0, 5)
+    and coalesce((select bool_and(value between 1 and 45) from unnest(draw_values) as value), true)
+    and cardinality(draw_values) = coalesce((select count(distinct value) from unnest(draw_values) as value), 0);
 $$;
 
 create table public.profiles (
@@ -176,7 +176,7 @@ create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   insert into public.profiles (id, email, full_name)
-  values (new.id, coalesce(new.email, ''), coalesce(new.raw_user_meta_data->>'full_name', ''));
+  draw_values (new.id, coalesce(new.email, ''), coalesce(new.raw_user_meta_data->>'full_name', ''));
   return new;
 end; $$;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
@@ -223,7 +223,7 @@ create policy "payouts admin write" on public.payouts for all using (public.is_a
 
 -- Private score evidence. Client uploads are restricted to the authenticated
 -- winner's own folder; signed URLs should be used for administrator review.
-insert into storage.buckets (id, name, public) values ('winner-proofs', 'winner-proofs', false) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) draw_values ('winner-proofs', 'winner-proofs', false) on conflict (id) do nothing;
 create policy "proof upload own folder" on storage.objects for insert to authenticated with check (
   bucket_id = 'winner-proofs' and (storage.foldername(name))[1] = auth.uid()::text
 );
