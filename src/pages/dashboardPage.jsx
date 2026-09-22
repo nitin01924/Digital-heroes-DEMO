@@ -1,32 +1,575 @@
-import { useState } from 'react'
-import { ChevronRight, CircleDollarSign, Heart, Pencil, Plus, ShieldCheck, Trophy, Upload, UserRound, X } from 'lucide-react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { APP, todayIso } from '../constants/config'
-import { Badge, Button, EmptyState, StatCard, StatusPill } from '../components/ui'
-import { useApp } from '../contexts/AppContext'
-import { scoreAverage } from '../services/scoreService'
-import { AppShell } from '../layouts'
+import { useState } from "react";
+import {
+  ChevronRight,
+  CircleDollarSign,
+  Heart,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  Trophy,
+  Upload,
+  UserRound,
+  X,
+} from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { APP, todayIso } from "../constants/config";
+import {
+  Badge,
+  Button,
+  EmptyState,
+  StatCard,
+  StatusPill,
+} from "../components/ui";
+import { useApp } from "../contexts/AppContext";
+import { scoreAverage } from "../services/scoreService";
+import { AppShell } from "../layouts";
 
-function SectionHeading({ eyebrow, title, copy, action }) { return <div className="dashboard-heading"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1>{copy && <p>{copy}</p>}</div>{action}</div> }
-
-function ScoreManager() {
-  const { user, state, isSubscriber, saveScore, deleteScore } = useApp(); const [editing, setEditing] = useState(null); const [form, setForm] = useState({ score: '', scoreDate: todayIso() }); const [error, setError] = useState('')
-  const scores = state.scores.filter((item) => item.userId === user.id).sort((a, b) => b.scoreDate.localeCompare(a.scoreDate))
-  const beginEdit = (score) => { setEditing(score.id); setForm({ score: score.score, scoreDate: score.scoreDate }); setError('') }
-  const submit = (event) => { event.preventDefault(); const result = saveScore({ ...form, id: editing }); if (result.error) return setError(result.error); setEditing(null); setError(''); setForm({ score: '', scoreDate: todayIso() }) }
-  if (!isSubscriber) return <article className="locked-card"><ShieldCheck size={22} /><div><h3>Scores unlock with membership</h3><p>Start a test plan to record Stableford scores and become draw eligible.</p></div><Link className="button button-primary" to="/#membership">Explore plans</Link></article>
-  return <div className="scores-layout"><article className="panel score-list-panel"><div className="panel-heading"><div><span className="eyebrow">Latest five only</span><h2>Your score record</h2></div><Badge tone="positive">{scores.length}/5 stored</Badge></div>{scores.length ? <div className="score-list">{scores.map((score) => <div className="score-row" key={score.id}><strong>{score.score}</strong><span>{new Date(`${score.scoreDate}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span><button className="table-action" onClick={() => beginEdit(score)} aria-label="Edit score"><Pencil size={15} /></button><button className="table-action danger" onClick={() => { const result = deleteScore(score.id); if (result?.error) setError(result.error) }} aria-label="Delete score"><X size={16} /></button></div>)}</div> : <EmptyState title="No scores yet" copy="Add your first Stableford score to begin." />}</article><article className="panel score-form-panel"><span className="eyebrow">{editing ? 'Edit score' : 'Add a score'}</span><h2>{editing ? 'Correct a round' : 'Keep it current'}</h2><p>One score per date. Adding a sixth safely removes the oldest.</p><form onSubmit={submit}><label className="form-field"><span>Stableford score</span><input min="1" max="45" step="1" type="number" value={form.score} onChange={(event) => setForm({ ...form, score: event.target.value })} required /></label><label className="form-field"><span>Date played</span><input max={todayIso()} type="date" value={form.scoreDate} onChange={(event) => setForm({ ...form, scoreDate: event.target.value })} required /></label>{error && <p className="form-error">{error}</p>}<div className="form-actions"><Button type="submit">{editing ? 'Save score' : 'Add score'} <Plus size={16} /></Button>{editing && <Button variant="ghost" type="button" onClick={() => { setEditing(null); setError('') }}>Cancel</Button>}</div></form></article></div>
+function SectionHeading({ eyebrow, title, copy, action }) {
+  return (
+    <div className="dashboard-heading">
+      <div>
+        <span className="eyebrow">{eyebrow}</span>
+        <h1>{title}</h1>
+        {copy && <p>{copy}</p>}
+      </div>
+      {action}
+    </div>
+  );
 }
 
-function SubscriptionCard() { const { subscription, startSubscription, cancelSubscription } = useApp(); if (!subscription || subscription.status !== 'active') return <article className="panel subscription-panel"><span className="eyebrow">Membership</span><h2>Not subscribed yet.</h2><p>Subscription-gated features are ready when you are. This is a safe local test flow — no charge will occur.</p><div className="plan-buttons"><Button onClick={() => startSubscription('monthly')}>Monthly · £12 test</Button><Button variant="secondary" onClick={() => startSubscription('yearly')}>Yearly · £120 test</Button></div></article>; return <article className="panel subscription-panel active-sub"><div className="panel-heading"><div><span className="eyebrow">Membership</span><h2>{APP.plans[subscription.plan].name} plan</h2></div><StatusPill value={subscription.status} /></div><p>Renews <strong>{new Date(`${subscription.renewalDate}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>. This test subscription makes score and draw features available in the demo.</p><button className="text-button" onClick={cancelSubscription}>Mark subscription cancelled</button></article> }
+function ScoreManager() {
+  const { user, state, isSubscriber, saveScore, deleteScore } = useApp();
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ score: "", scoreDate: todayIso() });
+  const [error, setError] = useState("");
+  const scores = state.scores
+    .filter((item) => item.userId === user.id)
+    .sort((a, b) => b.scoreDate.localeCompare(a.scoreDate));
+  const beginEdit = (score) => {
+    setEditing(score.id);
+    setForm({ score: score.score, scoreDate: score.scoreDate });
+    setError("");
+  };
+  const submit = (event) => {
+    event.preventDefault();
+    const result = saveScore({ ...form, id: editing });
+    if (result.error) return setError(result.error);
+    setEditing(null);
+    setError("");
+    setForm({ score: "", scoreDate: todayIso() });
+  };
+  if (!isSubscriber)
+    return (
+      <article className="locked-card">
+        <ShieldCheck size={22} />
+        <div>
+          <h3>Scores unlock with membership</h3>
+          <p>
+            Start a test plan to record Stableford scores and become draw
+            eligible.
+          </p>
+        </div>
+        <Link className="button button-primary" to="/#membership">
+          Explore plans
+        </Link>
+      </article>
+    );
+  return (
+    <div className="scores-layout">
+      <article className="panel score-list-panel">
+        <div className="panel-heading">
+          <div>
+            <span className="eyebrow">Latest five only</span>
+            <h2>Your score record</h2>
+          </div>
+          <Badge tone="positive">{scores.length}/5 stored</Badge>
+        </div>
+        {scores.length ? (
+          <div className="score-list">
+            {scores.map((score) => (
+              <div className="score-row" key={score.id}>
+                <strong>{score.score}</strong>
+                <span>
+                  {new Date(`${score.scoreDate}T12:00:00`).toLocaleDateString(
+                    "en-GB",
+                    { day: "numeric", month: "short", year: "numeric" },
+                  )}
+                </span>
+                <button
+                  className="table-action"
+                  onClick={() => beginEdit(score)}
+                  aria-label="Edit score"
+                >
+                  <Pencil size={15} />
+                </button>
+                <button
+                  className="table-action danger"
+                  onClick={() => {
+                    const result = deleteScore(score.id);
+                    if (result?.error) setError(result.error);
+                  }}
+                  aria-label="Delete score"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No scores yet"
+            copy="Add your first Stableford score to begin."
+          />
+        )}
+      </article>
+      <article className="panel score-form-panel">
+        <span className="eyebrow">
+          {editing ? "Edit score" : "Add a score"}
+        </span>
+        <h2>{editing ? "Correct a round" : "Keep it current"}</h2>
+        <p>One score per date. Adding a sixth safely removes the oldest.</p>
+        <form onSubmit={submit}>
+          <label className="form-field">
+            <span>Stableford score</span>
+            <input
+              min="1"
+              max="45"
+              step="1"
+              type="number"
+              value={form.score}
+              onChange={(event) =>
+                setForm({ ...form, score: event.target.value })
+              }
+              required
+            />
+          </label>
+          <label className="form-field">
+            <span>Date played</span>
+            <input
+              max={todayIso()}
+              type="date"
+              value={form.scoreDate}
+              onChange={(event) =>
+                setForm({ ...form, scoreDate: event.target.value })
+              }
+              required
+            />
+          </label>
+          {error && <p className="form-error">{error}</p>}
+          <div className="form-actions">
+            <Button type="submit">
+              {editing ? "Save score" : "Add score"} <Plus size={16} />
+            </Button>
+            {editing && (
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => {
+                  setEditing(null);
+                  setError("");
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
+        </form>
+      </article>
+    </div>
+  );
+}
 
-function ImpactCard() { const { user, state, chooseCharity } = useApp(); const [open, setOpen] = useState(false); const [percentage, setPercentage] = useState(user.contribution); const [charityId, setCharityId] = useState(user.charityId || state.charities[0]?.id || ''); const [error, setError] = useState(''); const charity = state.charities.find((item) => item.id === user.charityId); const save = () => { const result = chooseCharity(charityId, percentage); if (result?.error) return setError(result.error); setError(''); setOpen(false) }; return <article className="panel impact-panel"><div className="panel-heading"><div><span className="eyebrow">Giving preference</span><h2>{charity?.name || 'Choose a cause'}</h2></div><Heart size={21} /></div><p>{charity ? `${user.contribution}% of your prototype contribution is allocated to this fictional cause.` : 'Select a cause so your member experience feels personal.'}</p>{open && <div className="choice-box"><label className="form-field"><span>Demo charity</span><select value={charityId} onChange={(event) => setCharityId(event.target.value)}>{state.charities.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label className="form-field"><span>Contribution percentage</span><input type="number" min="0" max="100" value={percentage} onChange={(event) => setPercentage(event.target.value)} /></label>{error && <p className="form-error">{error}</p>}<Button onClick={save}>Save preference</Button></div>}<button className="text-button" onClick={() => setOpen(!open)}>{open ? 'Close preferences' : 'Change preference'} <ChevronRight size={15} /></button></article> }
+function SubscriptionCard() {
+  const { subscription, startSubscription, cancelSubscription } = useApp();
+  if (!subscription || subscription.status !== "active")
+    return (
+      <article className="panel subscription-panel">
+        <span className="eyebrow">Membership</span>
+        <h2>Not subscribed yet.</h2>
+        <p>
+          Subscription-gated features are ready when you are. This is a safe
+          local test flow — no charge will occur.
+        </p>
+        <div className="plan-buttons">
+          <Button onClick={() => startSubscription("monthly")}>
+            Monthly · £12 test
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => startSubscription("yearly")}
+          >
+            Yearly · £120 test
+          </Button>
+        </div>
+      </article>
+    );
+  return (
+    <article className="panel subscription-panel active-sub">
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">Membership</span>
+          <h2>{APP.plans[subscription.plan].name} plan</h2>
+        </div>
+        <StatusPill value={subscription.status} />
+      </div>
+      <p>
+        Renews{" "}
+        <strong>
+          {new Date(`${subscription.renewalDate}T12:00:00`).toLocaleDateString(
+            "en-GB",
+            { day: "numeric", month: "long", year: "numeric" },
+          )}
+        </strong>
+        . This test subscription makes score and draw features available in the
+        demo.
+      </p>
+      <button className="text-button" onClick={cancelSubscription}>
+        Mark subscription cancelled
+      </button>
+    </article>
+  );
+}
 
-function ProfileSettings() { const { user, updateProfile, resetDemo } = useApp(); const [name, setName] = useState(user.name); const [error, setError] = useState(''); const submit = (event) => { event.preventDefault(); const result = updateProfile({ name }); if (result?.error) setError(result.error); else setError('') }; return <div className="settings-grid"><article className="panel"><span className="eyebrow">Profile</span><h2>Account details</h2><p className="settings-copy">Your email is managed by the selected sign-in system. In local demo mode, profile changes stay in this browser.</p><form onSubmit={submit}><label className="form-field"><span>Display name</span><input value={name} onChange={(event) => setName(event.target.value)} required /></label><label className="form-field"><span>Email address</span><input value={user.email} disabled /></label>{error && <p className="form-error">{error}</p>}<Button type="submit"><UserRound size={16} /> Save profile</Button></form></article><article className="panel"><span className="eyebrow">Demo data</span><h2>Start fresh, safely.</h2><p className="settings-copy">Restore the supplied fictional records in this browser. This does not affect a connected Supabase project.</p><Button variant="ghost" onClick={resetDemo}>Restore demo data</Button></article></div> }
+function ImpactCard() {
+  const { user, state, chooseCharity } = useApp();
+  const [open, setOpen] = useState(false);
+  const [percentage, setPercentage] = useState(user.contribution);
+  const [charityId, setCharityId] = useState(
+    user.charityId || state.charities[0]?.id || "",
+  );
+  const [error, setError] = useState("");
+  const charity = state.charities.find((item) => item.id === user.charityId);
+  const save = () => {
+    const result = chooseCharity(charityId, percentage);
+    if (result?.error) return setError(result.error);
+    setError("");
+    setOpen(false);
+  };
+  return (
+    <article className="panel impact-panel">
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">Giving preference</span>
+          <h2>{charity?.name || "Choose a cause"}</h2>
+        </div>
+        <Heart size={21} />
+      </div>
+      <p>
+        {charity
+          ? `${user.contribution}% of your prototype contribution is allocated to this fictional cause.`
+          : "Select a cause so your member experience feels personal."}
+      </p>
+      {open && (
+        <div className="choice-box">
+          <label className="form-field">
+            <span>Demo charity</span>
+            <select
+              value={charityId}
+              onChange={(event) => setCharityId(event.target.value)}
+            >
+              {state.charities.map((item) => (
+                <option value={item.id} key={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="form-field">
+            <span>Contribution percentage</span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={percentage}
+              onChange={(event) => setPercentage(event.target.value)}
+            />
+          </label>
+          {error && <p className="form-error">{error}</p>}
+          <Button onClick={save}>Save preference</Button>
+        </div>
+      )}
+      <button className="text-button" onClick={() => setOpen(!open)}>
+        {open ? "Close preferences" : "Change preference"}{" "}
+        <ChevronRight size={15} />
+      </button>
+    </article>
+  );
+}
 
-function DrawAndWinnings() { const { user, state, isSubscriber, uploadProof } = useApp(); const [files, setFiles] = useState({}); const upcoming = state.draws.filter((draw) => draw.state !== 'published').sort((a, b) => a.date.localeCompare(b.date))[0]; const mine = state.winners.filter((winner) => winner.userId === user.id); const published = state.draws.filter((draw) => draw.state === 'published'); return <div className="draw-win-grid"><article className="panel"><span className="eyebrow">Draw participation</span><h2>{isSubscriber ? 'You’re in the running.' : 'Membership required.'}</h2>{upcoming ? <div className="upcoming-draw"><span>{new Date(`${upcoming.date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}</span><div><strong>{upcoming.title}</strong><small>{isSubscriber ? 'Your latest five scores form your entry.' : 'Activate a test plan to be included.'}</small></div></div> : <EmptyState title="No upcoming draw" copy="The administrator has not scheduled the next draw." />}<Link className="inline-link" to="/how-it-works">How entries work <ChevronRight size={16} /></Link></article><article className="panel"><span className="eyebrow">Winnings & verification</span><h2>{mine.length ? `£${mine.reduce((sum, winner) => sum + winner.amount, 0).toFixed(2)} awarded` : 'No winnings yet'}</h2>{mine.length ? <div className="winner-list">{mine.map((winner) => <div className="winner-item" key={winner.id}><div><strong>{winner.tier}-match award · £{winner.amount.toFixed(2)}</strong><small>{winner.proofName ? `Proof: ${winner.proofName}` : 'Upload a score proof for review'}</small></div><StatusPill value={winner.payout} />{!winner.proofName && <label className="upload-label"><Upload size={15} /> Upload<input type="file" accept="image/*,.pdf" onChange={(event) => { const result = uploadProof(winner.id, event.target.files?.[0]); if (result?.error) return }} /></label>}</div>)}</div> : <p>Published results and any proof workflow will appear here.</p>}<small className="fine-print">Proof uploads stay local in this browser until Supabase Storage is connected.</small></article><article className="panel previous-results"><span className="eyebrow">Previous results</span>{published.length ? published.map((draw) => <div key={draw.id}><strong>{draw.title}</strong><div className="mini-numbers">{draw.numbers.map((number) => <i key={number}>{number}</i>)}</div></div>) : <p>No prior published draw.</p>}</article></div> }
+function ProfileSettings() {
+  const { user, updateProfile, resetDemo } = useApp();
+  const [name, setName] = useState(user.name);
+  const [error, setError] = useState("");
+  const submit = (event) => {
+    event.preventDefault();
+    const result = updateProfile({ name });
+    if (result?.error) setError(result.error);
+    else setError("");
+  };
+  return (
+    <div className="settings-grid">
+      <article className="panel">
+        <span className="eyebrow">Profile</span>
+        <h2>Account details</h2>
+        <p className="settings-copy">
+          Your email is managed by the selected sign-in system. In local demo
+          mode, profile changes stay in this browser.
+        </p>
+        <form onSubmit={submit}>
+          <label className="form-field">
+            <span>Display name</span>
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+          </label>
+          <label className="form-field">
+            <span>Email address</span>
+            <input value={user.email} disabled />
+          </label>
+          {error && <p className="form-error">{error}</p>}
+          <Button type="submit">
+            <UserRound size={16} /> Save profile
+          </Button>
+        </form>
+      </article>
+      <article className="panel">
+        <span className="eyebrow">Demo data</span>
+        <h2>Start fresh, safely.</h2>
+        <p className="settings-copy">
+          Restore the supplied fictional records in this browser. This does not
+          affect a connected Supabase project.
+        </p>
+        <Button variant="ghost" onClick={resetDemo}>
+          Restore demo data
+        </Button>
+      </article>
+    </div>
+  );
+}
+
+function DrawAndWinnings() {
+  const { user, state, isSubscriber, uploadProof } = useApp();
+  const [files, setFiles] = useState({});
+  const upcoming = state.draws
+    .filter((draw) => draw.state !== "published")
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+  const mine = state.winners.filter((winner) => winner.userId === user.id);
+  const published = state.draws.filter((draw) => draw.state === "published");
+  return (
+    <div className="draw-win-grid">
+      <article className="panel draw-participation-panel">
+        <div className="draw-participation-header">
+          <span className="eyebrow">Draw participation</span>
+          <span className="draw-entry-status">
+            {isSubscriber ? "Entry active" : "Membership required"}
+          </span>
+        </div>
+        {upcoming ? (
+          <div className="upcoming-draw">
+            <time
+              className="draw-date-badge"
+              dateTime={upcoming.date}
+              aria-label={`Draw date: ${new Date(`${upcoming.date}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}`}
+            >
+              <span>
+                {new Date(`${upcoming.date}T12:00:00`).toLocaleDateString(
+                  "en-GB",
+                  { day: "numeric" },
+                )}
+              </span>
+              <small>
+                {new Date(`${upcoming.date}T12:00:00`).toLocaleDateString(
+                  "en-GB",
+                  { month: "short" },
+                )}
+              </small>
+            </time>
+            <div className="upcoming-draw-details">
+              <h2>{upcoming.title}</h2>
+              <p>
+                {isSubscriber
+                  ? "Your latest five scores form your entry."
+                  : "Activate a test plan to be included."}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <EmptyState
+            title="No upcoming draw"
+            copy="The administrator has not scheduled the next draw."
+          />
+        )}
+        <Link className="inline-link draw-entries-link" to="/how-it-works">
+          How entries work <ChevronRight size={16} />
+        </Link>
+      </article>
+      <article className="panel">
+        <span className="eyebrow">Winnings & verification</span>
+        <h2>
+          {mine.length
+            ? `£${mine.reduce((sum, winner) => sum + winner.amount, 0).toFixed(2)} awarded`
+            : "No winnings yet"}
+        </h2>
+        {mine.length ? (
+          <div className="winner-list">
+            {mine.map((winner) => (
+              <div className="winner-item" key={winner.id}>
+                <div>
+                  <strong>
+                    {winner.tier}-match award · £{winner.amount.toFixed(2)}
+                  </strong>
+                  <small>
+                    {winner.proofName
+                      ? `Proof: ${winner.proofName}`
+                      : "Upload a score proof for review"}
+                  </small>
+                </div>
+                <StatusPill value={winner.payout} />
+                {!winner.proofName && (
+                  <label className="upload-label">
+                    <Upload size={15} /> Upload
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(event) => {
+                        const result = uploadProof(
+                          winner.id,
+                          event.target.files?.[0],
+                        );
+                        if (result?.error) return;
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>Published results and any proof workflow will appear here.</p>
+        )}
+        <small className="fine-print">
+          Proof uploads stay local in this browser until Supabase Storage is
+          connected.
+        </small>
+      </article>
+      <article className="panel previous-results">
+        <span className="eyebrow">Previous results</span>
+        {published.length ? (
+          published.map((draw) => (
+            <div key={draw.id}>
+              <strong>{draw.title}</strong>
+              <div className="mini-numbers">
+                {draw.numbers.map((number) => (
+                  <i key={number}>{number}</i>
+                ))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No prior published draw.</p>
+        )}
+      </article>
+    </div>
+  );
+}
 
 export function DashboardPage() {
-  const { user, state, subscription } = useApp(); const [searchParams] = useSearchParams(); const scoreList = state.scores.filter((item) => item.userId === user.id); const section = searchParams.get('section'); const won = state.winners.filter((item) => item.userId === user.id).reduce((sum, item) => sum + item.amount, 0)
-  return <AppShell><SectionHeading eyebrow="Member space" title={`Good afternoon, ${user.name.split(' ')[0]}.`} copy="A concise view of your game, your chosen impact and your place in the draw." /><div className="stats-grid"><StatCard label="Membership" value={subscription?.status === 'active' ? 'Active' : 'Inactive'} detail={subscription ? `${APP.plans[subscription.plan]?.name || ''} plan` : 'Choose a test plan'} icon={ShieldCheck} color="#dcebdd" /><StatCard label="Score average" value={scoreList.length ? scoreAverage(scoreList) : '—'} detail={`${scoreList.length} of 5 scores`} icon={Trophy} color="#f1e6d7" /><StatCard label="Demo impact" value={`£${(user.contribution * 18.4).toFixed(0)}`} detail={`${user.contribution}% preference`} icon={Heart} color="#e8dce1" /><StatCard label="Winnings" value={`£${won.toFixed(0)}`} detail="Awarded in demo" icon={CircleDollarSign} color="#d8e9ea" /></div>{section === 'scores' ? <><SectionHeading eyebrow="Scores" title="Your latest five rounds." copy="This is the source of your draw entry." /><ScoreManager /></> : section === 'impact' ? <><SectionHeading eyebrow="Impact" title="Your chosen direction." copy="Review your charity and contribution preference." /><ImpactCard /></> : section === 'profile' ? <><SectionHeading eyebrow="Profile & settings" title="Keep your membership details current." copy="Manage your local demo profile and restore fictional data when needed." /><ProfileSettings /></> : <><div className="dashboard-two-col"><SubscriptionCard /><ImpactCard /></div><section className="dashboard-section"><SectionHeading eyebrow="Performance record" title="Keep the five that count." copy="Only your latest five scores are retained — reliably and visibly." /><ScoreManager /></section><section className="dashboard-section"><DrawAndWinnings /></section></>}</AppShell>
+  const { user, state, subscription } = useApp();
+  const [searchParams] = useSearchParams();
+  const scoreList = state.scores.filter((item) => item.userId === user.id);
+  const section = searchParams.get("section");
+  const won = state.winners
+    .filter((item) => item.userId === user.id)
+    .reduce((sum, item) => sum + item.amount, 0);
+  return (
+    <AppShell>
+      <SectionHeading
+        eyebrow="Member space"
+        title={`Good afternoon, ${user.name.split(" ")[0]}.`}
+        copy="A concise view of your game, your chosen impact and your place in the draw."
+      />
+      <div className="stats-grid">
+        <StatCard
+          label="Membership"
+          value={subscription?.status === "active" ? "Active" : "Inactive"}
+          detail={
+            subscription
+              ? `${APP.plans[subscription.plan]?.name || ""} plan`
+              : "Choose a test plan"
+          }
+          icon={ShieldCheck}
+          color="#dcebdd"
+        />
+        <StatCard
+          label="Score average"
+          value={scoreList.length ? scoreAverage(scoreList) : "—"}
+          detail={`${scoreList.length} of 5 scores`}
+          icon={Trophy}
+          color="#f1e6d7"
+        />
+        <StatCard
+          label="Demo impact"
+          value={`£${(user.contribution * 18.4).toFixed(0)}`}
+          detail={`${user.contribution}% preference`}
+          icon={Heart}
+          color="#e8dce1"
+        />
+        <StatCard
+          label="Winnings"
+          value={`£${won.toFixed(0)}`}
+          detail="Awarded in demo"
+          icon={CircleDollarSign}
+          color="#d8e9ea"
+        />
+      </div>
+      {section === "scores" ? (
+        <>
+          <SectionHeading
+            eyebrow="Scores"
+            title="Your latest five rounds."
+            copy="This is the source of your draw entry."
+          />
+          <ScoreManager />
+        </>
+      ) : section === "impact" ? (
+        <>
+          <SectionHeading
+            eyebrow="Impact"
+            title="Your chosen direction."
+            copy="Review your charity and contribution preference."
+          />
+          <ImpactCard />
+        </>
+      ) : section === "profile" ? (
+        <>
+          <SectionHeading
+            eyebrow="Profile & settings"
+            title="Keep your membership details current."
+            copy="Manage your local demo profile and restore fictional data when needed."
+          />
+          <ProfileSettings />
+        </>
+      ) : (
+        <>
+          <div className="dashboard-two-col">
+            <SubscriptionCard />
+            <ImpactCard />
+          </div>
+          <section className="dashboard-section">
+            <SectionHeading
+              eyebrow="Performance record"
+              title="Keep the five that count."
+              copy="Only your latest five scores are retained — reliably and visibly."
+            />
+            <ScoreManager />
+          </section>
+          <section className="dashboard-section">
+            <DrawAndWinnings />
+          </section>
+        </>
+      )}
+    </AppShell>
+  );
 }

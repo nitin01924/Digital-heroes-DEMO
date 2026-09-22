@@ -1,37 +1,569 @@
-import { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowRight, CalendarDays, CheckCircle2, CircleDollarSign, Gift, Heart, Search, ShieldCheck, Sparkles, Target, Trophy, UsersRound } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
-import { APP } from '../constants/config'
-import { BackLink, Badge, Button, EmptyState, LinkArrow, PageHero, Reveal } from '../components/ui'
-import { useApp } from '../contexts/AppContext'
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  CircleDollarSign,
+  Gift,
+  Heart,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  Trophy,
+  UsersRound,
+} from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { APP } from "../constants/config";
+import {
+  BackLink,
+  Badge,
+  Button,
+  EmptyState,
+  LinkArrow,
+  PageHero,
+  Reveal,
+} from "../components/ui";
+import { useApp } from "../contexts/AppContext";
 
-function CharityArt({ charity, compact = false }) { return <div className={compact ? 'charity-art compact' : 'charity-art'} style={{ '--art': charity.color }}><span>{charity.name.split(' ').slice(0, 2).map((word) => word[0]).join('')}</span><i /><b /></div> }
+function CharityArt({ charity, compact = false }) {
+  return (
+    <div
+      className={compact ? "charity-art compact" : "charity-art"}
+      style={{ "--art": charity.color }}
+    >
+      <span>
+        {charity.name
+          .split(" ")
+          .slice(0, 2)
+          .map((word) => word[0])
+          .join("")}
+      </span>
+      <i />
+      <b />
+    </div>
+  );
+}
 
-export function CharityCard({ charity }) { return <article className="charity-card"><CharityArt charity={charity} compact /><div className="charity-card-body"><div className="card-top"><Badge tone="neutral">{charity.category}</Badge>{charity.featured && <Badge tone="positive">Featured</Badge>}</div><h3>{charity.name}</h3><p>{charity.description}</p><div className="charity-meta"><span>£{charity.raised.toLocaleString()} demo impact</span><span>{charity.supporters} supporters</span></div><LinkArrow to={`/charities/${charity.id}`}>Meet the charity</LinkArrow></div></article> }
+export function CharityCard({ charity }) {
+  return (
+    <article className="charity-card">
+      <CharityArt charity={charity} compact />
+      <div className="charity-card-body">
+        <div className="card-top">
+          <Badge tone="neutral">{charity.category}</Badge>
+          {charity.featured && <Badge tone="positive">Featured</Badge>}
+        </div>
+        <h3>{charity.name}</h3>
+        <p>{charity.description}</p>
+        <div className="charity-meta">
+          <span>£{charity.raised.toLocaleString()} demo impact</span>
+          <span>{charity.supporters} supporters</span>
+        </div>
+        <LinkArrow to={`/charities/${charity.id}`}>Meet the charity</LinkArrow>
+      </div>
+    </article>
+  );
+}
 
 export function LandingPage() {
-  const { state, user, startSubscription } = useApp()
-  const featured = state.charities.filter((charity) => charity.featured).slice(0, 3)
-  return <>
-    <section className="hero"><div className="shell hero-grid"><Reveal className="hero-copy"><span className="eyebrow light"><Sparkles size={14} /> Golf, impact, possibility</span><h1>Every round can <em>mean more.</em></h1><p>A considered membership experience where your game, your chosen cause and a monthly draw live in one purposeful place.</p><div className="hero-actions"><Link className="button button-primary" to={user ? '/dashboard' : '/signup'}>{user ? 'Open my space' : 'Join the demo'} <ArrowRight size={16} /></Link><Link className="button button-dark-outline" to="/how-it-works">See how it works</Link></div><div className="hero-proof"><span><CheckCircle2 size={17} /> Test-mode checkout</span><span><CheckCircle2 size={17} /> Fictional charities</span></div></Reveal><Reveal delay={.12} className="hero-art"><div className="orbit orbit-a" /><div className="orbit orbit-b" /><div className="hero-draw-card"><span className="eyebrow">Next community draw</span><strong>30</strong><small>September</small><div className="draw-number-row">{[8, 18, 27, 34, 42].map((number) => <i key={number}>{number}</i>)}</div><p>Five personal scores. One shared moment.</p></div><div className="impact-float"><Heart size={17} /><span><strong>£48.2k</strong><small>demo impact</small></span></div></Reveal></div></section>
-    <section className="signal-strip"><div className="shell"><span>Not a traditional golf platform</span><span>•</span><span>Made for people who play with purpose</span><span>•</span><span>Built as a selection demo</span></div></section>
-    <section className="section shell"><Reveal><span className="eyebrow">A better kind of scorecard</span><div className="section-heading"><h2>Your game moves in three directions.</h2><p>Record your Stableford scores, set your giving preference, and take your place in a transparent monthly draw.</p></div></Reveal><div className="flow-grid"><Reveal delay={.05}><article className="flow-card"><span>01</span><Trophy /><h3>Play</h3><p>Keep your latest five Stableford scores in one calm, clear record.</p></article></Reveal><Reveal delay={.12}><article className="flow-card flow-card-accent"><span>02</span><Heart /><h3>Give</h3><p>Choose a fictional cause in this demo and direct your contribution.</p></article></Reveal><Reveal delay={.18}><article className="flow-card"><span>03</span><Gift /><h3>Win</h3><p>Eligible members enter a five-number monthly draw from their scores.</p></article></Reveal></div></section>
-    <section className="impact-band"><div className="shell impact-grid"><Reveal><span className="eyebrow light">Impact, with intention</span><h2>Choose where your membership energy goes.</h2><p>In this prototype, members can choose a cause and a contribution percentage. It’s a useful way to make the relationship between participation and impact visible.</p><Link className="button button-light" to="/charities">Explore demo charities <ArrowRight size={16} /></Link></Reveal><Reveal delay={.1} className="impact-metrics"><div><strong>5</strong><span>fictional causes</span></div><div><strong>20%</strong><span>default member allocation</span></div><div><strong>£184k</strong><span>sample collective impact</span></div></Reveal></div></section>
-    <section className="section shell"><Reveal><span className="eyebrow">Featured causes</span><div className="section-heading row-heading"><h2>Small decisions, shared momentum.</h2><LinkArrow to="/charities">View directory</LinkArrow></div></Reveal><div className="charity-grid">{featured.map((charity, index) => <Reveal delay={index * .06} key={charity.id}><CharityCard charity={charity} /></Reveal>)}</div></section>
-    <section className="section shell draw-explainer"><Reveal className="draw-explainer-copy"><span className="eyebrow">The monthly draw</span><h2>Five values, matched with care.</h2><p>Each active member’s five most recent scores become a single entry. Admins can simulate a random or score-frequency-weighted draw, review it privately, then publish the final result.</p><ul><li><CheckCircle2 size={17} /> Five matches: 40% of the prize pool</li><li><CheckCircle2 size={17} /> Four matches: 35%</li><li><CheckCircle2 size={17} /> Three matches: 25%</li></ul><Link className="inline-link" to="/how-it-works">Read the draw rules <ArrowRight size={16} /></Link></Reveal><Reveal delay={.1} className="tier-card"><span className="eyebrow">Transparent by design</span><div><b>5</b><p>match tier<br /><strong>40%</strong> of the pool</p></div><div><b>4</b><p>match tier<br /><strong>35%</strong> of the pool</p></div><div><b>3</b><p>match tier<br /><strong>25%</strong> of the pool</p></div><small>Unclaimed 5-match awards roll over. The others reset with each draw.</small></Reveal></section>
-    <section className="section shell"><Reveal><span className="eyebrow">Membership</span><div className="section-heading centered"><h2>A simple test-mode choice.</h2><p>Plans below are demonstration content. Starting one updates this browser’s local demo state and does not take payment.</p></div></Reveal><div className="plan-grid">{Object.entries(APP.plans).map(([id, plan]) => <Reveal key={id} delay={id === 'yearly' ? .08 : 0}><article className={id === 'yearly' ? 'plan-card plan-featured' : 'plan-card'}>{plan.saving && <Badge tone="positive">{plan.saving}</Badge>}<h3>{plan.name}</h3><p className="price">£{plan.price}<small>/{plan.interval}</small></p><p>Record scores, choose a cause, join the draw, and follow your impact.</p><ul><li><CheckCircle2 size={16} /> Latest five score record</li><li><CheckCircle2 size={16} /> Charity preference</li><li><CheckCircle2 size={16} /> Monthly draw eligibility</li></ul><Button onClick={() => startSubscription(id)}>{user ? 'Start test plan' : 'Sign in to subscribe'} <ArrowRight size={16} /></Button></article></Reveal>)}</div></section>
-    <section className="trust-section"><div className="shell"><ShieldCheck size={22} /><p><strong>Designed as a transparent selection demo.</strong> No real donations, draw entries, winnings or payments are processed here.</p></div></section>
-  </>
+  const { state, user, startSubscription } = useApp();
+  const featured = state.charities
+    .filter((charity) => charity.featured)
+    .slice(0, 3);
+  return (
+    <>
+      <section className="hero">
+        <div className="shell hero-grid">
+          <Reveal className="hero-copy">
+            <span className="eyebrow light">
+              <Sparkles size={14} /> Golf, impact, possibility
+            </span>
+            <h1>
+              Every round can <em>mean more.</em>
+            </h1>
+            <p>
+              A considered membership experience where your game, your chosen
+              cause and a monthly draw live in one purposeful place.
+            </p>
+            <div className="hero-actions">
+              <Link
+                className="button button-primary"
+                to={user ? "/dashboard" : "/signup"}
+              >
+                {user ? "Open my space" : "Join the demo"}{" "}
+                <ArrowRight size={16} />
+              </Link>
+              <Link className="button button-dark-outline" to="/how-it-works">
+                See how it works
+              </Link>
+            </div>
+            <div className="hero-proof">
+              <span>
+                <CheckCircle2 size={17} /> Test-mode checkout
+              </span>
+              <span>
+                <CheckCircle2 size={17} /> Fictional charities
+              </span>
+            </div>
+          </Reveal>
+          <Reveal delay={0.12} className="hero-art">
+            <div className="orbit orbit-a" />
+            <div className="orbit orbit-b" />
+            <div className="hero-draw-card">
+              <span className="eyebrow">Next community draw</span>
+              <strong>30</strong>
+              <small>September</small>
+              <div className="draw-number-row">
+                {[8, 18, 27, 34, 42].map((number) => (
+                  <i key={number}>{number}</i>
+                ))}
+              </div>
+              <p>Five personal scores. One shared moment.</p>
+            </div>
+            <div className="impact-float">
+              <Heart size={17} />
+              <span>
+                <strong>£48.2k</strong>
+                <small>demo impact</small>
+              </span>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+      <section className="signal-strip">
+        <div className="shell">
+          <span>Not a traditional golf platform</span>
+          <span>•</span>
+          <span>Made for people who play with purpose</span>
+          <span>•</span>
+          <span>Built as a selection demo</span>
+        </div>
+      </section>
+      <section className="section shell">
+        <Reveal>
+          <span className="eyebrow">A better kind of scorecard</span>
+          <div className="section-heading">
+            <h2>Your game moves in three directions.</h2>
+            <p>
+              Record your Stableford scores, set your giving preference, and
+              take your place in a transparent monthly draw.
+            </p>
+          </div>
+        </Reveal>
+        <div className="flow-grid">
+          <Reveal delay={0.05}>
+            <article className="flow-card">
+              <span>01</span>
+              <Trophy />
+              <h3>Play</h3>
+              <p>
+                Keep your latest five Stableford scores in one calm, clear
+                record.
+              </p>
+            </article>
+          </Reveal>
+          <Reveal delay={0.12}>
+            <article className="flow-card flow-card-accent">
+              <span>02</span>
+              <Heart />
+              <h3>Give</h3>
+              <p>
+                Choose a fictional cause in this demo and direct your
+                contribution.
+              </p>
+            </article>
+          </Reveal>
+          <Reveal delay={0.18}>
+            <article className="flow-card">
+              <span>03</span>
+              <Gift />
+              <h3>Win</h3>
+              <p>
+                Eligible members enter a five-number monthly draw from their
+                scores.
+              </p>
+            </article>
+          </Reveal>
+        </div>
+      </section>
+      <section className="impact-band">
+        <div className="shell impact-grid">
+          <Reveal>
+            <span className="eyebrow light">Impact, with intention</span>
+            <h2>Choose where your membership energy goes.</h2>
+            <p>
+              In this prototype, members can choose a cause and a contribution
+              percentage. It’s a useful way to make the relationship between
+              participation and impact visible.
+            </p>
+            <Link className="button button-light" to="/charities">
+              Explore demo charities <ArrowRight size={16} />
+            </Link>
+          </Reveal>
+          <Reveal delay={0.1} className="impact-metrics">
+            <div>
+              <strong>5</strong>
+              <span>fictional causes</span>
+            </div>
+            <div>
+              <strong>20%</strong>
+              <span>default member allocation</span>
+            </div>
+            <div>
+              <strong>£184k</strong>
+              <span>sample collective impact</span>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+      <section className="section shell">
+        <Reveal>
+          <span className="eyebrow">Featured causes</span>
+          <div className="section-heading row-heading">
+            <h2>Small decisions, shared momentum.</h2>
+            <LinkArrow to="/charities">View directory</LinkArrow>
+          </div>
+        </Reveal>
+        <div className="charity-grid">
+          {featured.map((charity, index) => (
+            <Reveal delay={index * 0.06} key={charity.id}>
+              <CharityCard charity={charity} />
+            </Reveal>
+          ))}
+        </div>
+      </section>
+      <section className="section shell draw-explainer">
+        <Reveal className="draw-explainer-copy">
+          <span className="eyebrow">The monthly draw</span>
+          <h2>Five values, matched with care.</h2>
+          <p>
+            Each active member’s five most recent scores become a single entry.
+            Admins can simulate a random or score-frequency-weighted draw,
+            review it privately, then publish the final result.
+          </p>
+          <ul>
+            <li>
+              <CheckCircle2 size={17} /> Five matches: 40% of the prize pool
+            </li>
+            <li>
+              <CheckCircle2 size={17} /> Four matches: 35%
+            </li>
+            <li>
+              <CheckCircle2 size={17} /> Three matches: 25%
+            </li>
+          </ul>
+          <Link className="inline-link" to="/how-it-works">
+            Read the draw rules <ArrowRight size={16} />
+          </Link>
+        </Reveal>
+        <Reveal delay={0.1} className="tier-card">
+          <span className="eyebrow">Transparent by design</span>
+          <div>
+            <b>5</b>
+            <p>
+              match tier
+              <br />
+              <strong>40%</strong> of the pool
+            </p>
+          </div>
+          <div>
+            <b>4</b>
+            <p>
+              match tier
+              <br />
+              <strong>35%</strong> of the pool
+            </p>
+          </div>
+          <div>
+            <b>3</b>
+            <p>
+              match tier
+              <br />
+              <strong>25%</strong> of the pool
+            </p>
+          </div>
+          <small>
+            Unclaimed 5-match awards roll over. The others reset with each draw.
+          </small>
+        </Reveal>
+      </section>
+      <section className="section shell">
+        <Reveal>
+          <span className="eyebrow">Membership</span>
+          <div className="section-heading centered">
+            <h2>A simple test-mode choice.</h2>
+            <p>
+              Plans below are demonstration content. Starting one updates this
+              browser’s local demo state and does not take payment.
+            </p>
+          </div>
+        </Reveal>
+        <div className="plan-grid">
+          {Object.entries(APP.plans).map(([id, plan]) => (
+            <Reveal key={id} delay={id === "yearly" ? 0.08 : 0}>
+              <article
+                className={
+                  id === "yearly" ? "plan-card plan-featured" : "plan-card"
+                }
+              >
+                {plan.saving && <Badge tone="positive">{plan.saving}</Badge>}
+                <h3>{plan.name}</h3>
+                <p className="price">
+                  £{plan.price}
+                  <small>/{plan.interval}</small>
+                </p>
+                <p>
+                  Record scores, choose a cause, join the draw, and follow your
+                  impact.
+                </p>
+                <ul>
+                  <li>
+                    <CheckCircle2 size={16} /> Latest five score record
+                  </li>
+                  <li>
+                    <CheckCircle2 size={16} /> Charity preference
+                  </li>
+                  <li>
+                    <CheckCircle2 size={16} /> Monthly draw eligibility
+                  </li>
+                </ul>
+                <Button onClick={() => startSubscription(id)}>
+                  {user ? "Start test plan" : "Sign in to subscribe"}{" "}
+                  <ArrowRight size={16} />
+                </Button>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+      <section className="trust-section">
+        <div className="shell">
+          <ShieldCheck size={22} />
+          <p>
+            <strong>Designed as a transparent selection demo.</strong> No real
+            donations, draw entries, winnings or payments are processed here.
+          </p>
+        </div>
+      </section>
+    </>
+  );
 }
 
-export function HowItWorksPage() { return <><PageHero eyebrow="The mechanics" title="Made simple. Kept accountable." copy="Digital Heroes is a fictional selection-demo model for a membership product that combines scores, giving and a monthly draw." /><section className="section shell steps-list">{[['01', 'Become eligible', 'Select a monthly or annual test subscription. An active subscription gates score and draw features.'], ['02', 'Set your five', 'Add Stableford scores between 1–45. One score per date is allowed and the app retains only the latest five.'], ['03', 'Choose an impact', 'Select a demo cause and set a percentage of your contribution for it.'], ['04', 'Enter the draw', 'Your latest five values form one entry. Admins privately simulate, then publish a draw result.'], ['05', 'Verify a win', 'A winner can upload score proof; an administrator reviews it before the payout workflow progresses.']].map(([number, title, copy]) => <Reveal key={number}><article className="step-row"><span>{number}</span><div><h2>{title}</h2><p>{copy}</p></div></article></Reveal>)}</section><section className="section muted-section"><div className="shell algorithm-grid"><div><span className="eyebrow">Draw modes</span><h2>Two understandable ways to generate a demonstration draw.</h2></div><div><h3>Random</h3><p>Five unique values, chosen uniformly from 1 to 45.</p><h3>Score-frequency weighted</h3><p>Each score value seen in active members’ records receives a higher chance of selection, while every value remains possible. The process is intentionally inspectable in the admin workspace.</p></div></div></section></> }
+export function HowItWorksPage() {
+  return (
+    <>
+      <PageHero
+        eyebrow="The mechanics"
+        title="Made simple. Kept accountable."
+        copy="Digital Heroes is a fictional selection-demo model for a membership product that combines scores, giving and a monthly draw."
+      />
+      <section className="section shell steps-list">
+        {[
+          [
+            "01",
+            "Become eligible",
+            "Select a monthly or annual test subscription. An active subscription gates score and draw features.",
+          ],
+          [
+            "02",
+            "Set your five",
+            "Add Stableford scores between 1–45. One score per date is allowed and the app retains only the latest five.",
+          ],
+          [
+            "03",
+            "Choose an impact",
+            "Select a demo cause and set a percentage of your contribution for it.",
+          ],
+          [
+            "04",
+            "Enter the draw",
+            "Your latest five values form one entry. Admins privately simulate, then publish a draw result.",
+          ],
+          [
+            "05",
+            "Verify a win",
+            "A winner can upload score proof; an administrator reviews it before the payout workflow progresses.",
+          ],
+        ].map(([number, title, copy]) => (
+          <Reveal key={number}>
+            <article className="step-row">
+              <span>{number}</span>
+              <div>
+                <h2>{title}</h2>
+                <p>{copy}</p>
+              </div>
+            </article>
+          </Reveal>
+        ))}
+      </section>
+      <section className="section muted-section">
+        <div className="shell algorithm-grid">
+          <div>
+            <span className="eyebrow">Draw modes</span>
+            <h2>Two understandable ways to generate a demonstration draw.</h2>
+          </div>
+          <div>
+            <h3>Random</h3>
+            <p>Five unique values, chosen uniformly from 1 to 45.</p>
+            <h3>Score-frequency weighted</h3>
+            <p>
+              Each score value seen in active members’ records receives a higher
+              chance of selection, while every value remains possible. The
+              process is intentionally inspectable in the admin workspace.
+            </p>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
 
 export function CharitiesPage() {
-  const { state } = useApp(); const [query, setQuery] = useState(''); const [filter, setFilter] = useState('All')
-  const categories = ['All', ...new Set(state.charities.map((item) => item.category))]
-  const shown = useMemo(() => state.charities.filter((charity) => (filter === 'All' || charity.category === filter) && `${charity.name} ${charity.description}`.toLowerCase().includes(query.toLowerCase())), [state.charities, query, filter])
-  return <><PageHero eyebrow="The cause directory" title="Find the impact that feels personal." copy="Each organisation shown here is fictional demo data, created to demonstrate the selection and reporting experience." /><section className="section shell"><div className="directory-tools"><label className="search-box"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search demo causes" aria-label="Search charities" /></label><div className="filter-chips">{categories.map((category) => <button className={filter === category ? 'active' : ''} key={category} onClick={() => setFilter(category)}>{category}</button>)}</div></div>{shown.length ? <div className="charity-grid directory-grid">{shown.map((charity) => <CharityCard charity={charity} key={charity.id} />)}</div> : <EmptyState title="No causes found" copy="Try a different search or category." />}</section></>
+  const { state } = useApp();
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("All");
+  const categories = [
+    "All",
+    ...new Set(state.charities.map((item) => item.category)),
+  ];
+  const shown = useMemo(
+    () =>
+      state.charities.filter(
+        (charity) =>
+          (filter === "All" || charity.category === filter) &&
+          `${charity.name} ${charity.description}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+      ),
+    [state.charities, query, filter],
+  );
+  return (
+    <>
+      <PageHero
+        eyebrow="The cause directory"
+        title="Find the impact that feels personal."
+        copy="Each organisation shown here is fictional demo data, created to demonstrate the selection and reporting experience."
+      />
+      <section className="section shell">
+        <div className="directory-tools">
+          <label className="search-box">
+            <Search size={18} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search demo causes"
+              aria-label="Search charities"
+            />
+          </label>
+          <div className="filter-chips">
+            {categories.map((category) => (
+              <button
+                className={filter === category ? "active" : ""}
+                key={category}
+                onClick={() => setFilter(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+        {shown.length ? (
+          <div className="charity-grid directory-grid">
+            {shown.map((charity) => (
+              <CharityCard charity={charity} key={charity.id} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No causes found"
+            copy="Try a different search or category."
+          />
+        )}
+      </section>
+    </>
+  );
 }
 
-export function CharityDetailPage() { const { id } = useParams(); const { state, user, chooseCharity } = useApp(); const charity = state.charities.find((item) => item.id === id); const [percentage, setPercentage] = useState(user?.contribution || 20); if (!charity) return <section className="section shell"><EmptyState title="Cause not found" copy="This demonstration charity is no longer available." action={<Link className="button button-primary" to="/charities">View directory</Link>} /></section>; return <><section className="detail-hero"><div className="shell"><BackLink to="/charities" children="All demo causes" /><div className="detail-grid"><CharityArt charity={charity} /><div><Badge tone="neutral">{charity.category}</Badge><h1>{charity.name}</h1><p>{charity.description}</p><div className="detail-stats"><span><strong>£{charity.raised.toLocaleString()}</strong> demo impact</span><span><strong>{charity.supporters}</strong> fictional supporters</span></div></div></div></div></section><section className="section shell detail-content"><div><span className="eyebrow">Upcoming demo events</span>{charity.events.map((event) => <article className="event-row" key={event}><CalendarDays size={18} />{event}</article>)}</div><aside className="preference-card"><span className="eyebrow">Member preference</span><h2>Direct your demo contribution.</h2><p>Choose the proportion allocated to this selected cause. This is a prototype setting, not a real donation.</p><label>Contribution percentage<input type="number" min="0" max="100" value={percentage} onChange={(event) => setPercentage(event.target.value)} /></label><Button onClick={() => chooseCharity(charity.id, percentage)} disabled={!user}>{user ? 'Choose this cause' : 'Sign in to choose'}</Button></aside></section></> }
+export function CharityDetailPage() {
+  const { id } = useParams();
+  const { state, user, chooseCharity } = useApp();
+  const charity = state.charities.find((item) => item.id === id);
+  const [percentage, setPercentage] = useState(user?.contribution || 20);
+  if (!charity)
+    return (
+      <section className="section shell">
+        <EmptyState
+          title="Cause not found"
+          copy="This demonstration charity is no longer available."
+          action={
+            <Link className="button button-primary" to="/charities">
+              View directory
+            </Link>
+          }
+        />
+      </section>
+    );
+  return (
+    <>
+      <section className="detail-hero">
+        <div className="shell">
+          <BackLink to="/charities" children="All demo causes" />
+          <div className="detail-grid">
+            <CharityArt charity={charity} />
+            <div>
+              <Badge tone="neutral">{charity.category}</Badge>
+              <h1>{charity.name}</h1>
+              <p>{charity.description}</p>
+              <div className="detail-stats">
+                <span>
+                  <strong>£{charity.raised.toLocaleString()}</strong> demo
+                  impact
+                </span>
+                <span>
+                  <strong>{charity.supporters}</strong> fictional supporters
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="section shell detail-content">
+        <div>
+          <span className="eyebrow">Upcoming demo events</span>
+          {charity.events.map((event) => (
+            <article className="event-row" key={event}>
+              <CalendarDays size={18} />
+              {event}
+            </article>
+          ))}
+        </div>
+        <aside className="preference-card">
+          <span className="eyebrow">Member preference</span>
+          <h2>Direct your demo contribution.</h2>
+          <p>
+            Choose the proportion allocated to this selected cause. This is a
+            prototype setting, not a real donation.
+          </p>
+          <label>
+            Contribution percentage
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={percentage}
+              onChange={(event) => setPercentage(event.target.value)}
+            />
+          </label>
+          <Button
+            onClick={() => chooseCharity(charity.id, percentage)}
+            disabled={!user}
+          >
+            {user ? "Choose this cause" : "Sign in to choose"}
+          </Button>
+        </aside>
+      </section>
+    </>
+  );
+}
